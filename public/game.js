@@ -11,9 +11,9 @@ function sleep(ms) {
 async function run() {
     var socket;
     var id;
-    socket = io.connect('http://192.168.0.26:4000');
+    socket = io.connect('http://192.168.52.51:4000');
     socket.on('connect', function() {
-        id = console.log(socket.id);
+        id = socket.id;
     });
     
     
@@ -51,11 +51,11 @@ async function run() {
         t0 = performance.now();
         
 
-        
+        connection();
         draw();
         update();
         
-        connection();
+        
         if (oBall.isFinished() === true) {
             bGame = false;
         }
@@ -89,9 +89,14 @@ async function run() {
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         oBall.draw();
-        for (let oOther of oBallOther) {
-            oOther.draw();
+        if (oOtherId.length > 0) {
+//            console.log(oOtherId.length);
+            for (let oOther of oOtherId) {
+                
+                oBallOther[oOther].draw();
+            }
         }
+        
         
     }
     
@@ -100,6 +105,7 @@ async function run() {
     function connection() {
         socket.emit('player', oBall.getPosition());
         socket.on('players', playerData);
+        socket.on('delete', deletePlayer);
         
         function playerData(data) {
 //            
@@ -116,14 +122,29 @@ async function run() {
                     if (oOtherId.includes(data[key].id) === false) {
                         if(data[key].id !== id) {
                             oOtherId[oOtherId.length] = data[key].id;
-                            oBallOther[oBallOther.length] = new Ball(canvas);
+                            oBallOther[data[key].id] = new Ball(canvas);
+//                            console.log(oBallOther);
+//                            console.log(id);
+                            
                         }
+                    } else {
+                        oBallOther[data[key].id].setPosition(data[key].x, data[key].y);
                     }
-
                 }
             }
             
 //            oBallOther.setPosition(data.x, data.y);
+        }
+        
+        function deletePlayer(data) {
+//            console.log(data);
+//            console.log('delete');
+            for (let i = 0; i < oOtherId.length; i++) {
+                if (oOtherId[i] === data) {
+                    oOtherId.splice(i, 1);
+                }
+            }
+            delete oBallOther[data];
         }
     }
 }

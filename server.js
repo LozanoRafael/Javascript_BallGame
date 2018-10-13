@@ -26,7 +26,7 @@ function newConnection(socket) {
     
     players['players'+playerNum] = {id: socket.id};
     
-    count++;
+    
     
     console.log('new connection: ' + socket.id);
     console.log('player count: ' + count);
@@ -38,15 +38,20 @@ function newConnection(socket) {
         players['players'+playerNum].x = data.x;
         players['players'+playerNum].y = data.y;
         socket.broadcast.emit('players', players);
+        
     }
     
     socket.on('disconnect', endConnection);
     
     function endConnection() {
     //    console.log(socket);
+        socket.broadcast.emit('delete', socket.id);
         delete players['players'+playerNum];
         console.log('ended connection: ' + socket.id);
+        
     }
+    
+    count++;
 }
 
 
